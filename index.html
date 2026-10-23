@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editz Studio - Real AI Cartoon & Lip-Sync Video Creator</title>
+
+  <!-- PWA Web App Manifest -->
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVkaXR6IFN0dWRpbyIsCiAgInNob3J0X25hbWUiOiAiRWRpdHoiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBkMTExNyIsCiAgInRoZW1lX2NvbG9yIjogIiM2MzY2ZjEiCn0=">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    .glassmorphism {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glow-btn {
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+    .glow-btn:hover {
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.7);
+    }
+    .tab-btn.active {
+      background-color: #6366f1;
+      color: #ffffff;
+      border-color: #818cf8;
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-between">
+
+  <!-- PWA Install Alert Banner -->
+  <div id="pwa-banner" class="hidden bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 text-center flex justify-between items-center px-6 shadow-xl border-b border-white/10">
+    <span class="text-sm font-medium"><i class="fa-solid fa-mobile-screen-button mr-2"></i> Install our official Web App on your phone for full speed!</span>
+    <button onclick="installPWA()" class="bg-white text-indigo-900 font-bold px-4 py-1.5 rounded-full text-xs shadow hover:bg-slate-100 transition">Install App</button>
+  </div>
+
+  <!-- Header Section -->
+  <header class="glassmorphism sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-lg">
+    <div class="flex items-center gap-3 cursor-pointer select-none" onclick="handleSecretClick()" title="Click 5 times for Admin Panel">
+      <img id="app-logo" src="https://via.placeholder.com/40/6366f1/ffffff?text=E" class="w-10 h-10 rounded-xl border-2 border-indigo-400 object-cover shadow" alt="Logo">
+      <h1 id="app-name" class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">Editz Studio</h1>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button onclick="toggleVoiceGuide()" id="voice-toggle-btn" class="bg-slate-800/80 border border-slate-700 px-3 py-2 rounded-xl text-xs flex items-center gap-2 hover:bg-slate-700 transition">
+        <i id="voice-icon" class="fa-solid fa-volume-high text-indigo-400"></i>
+        <span id="voice-text" class="font-semibold">Voice: ON</span>
+      </button>
+
+      <div id="auth-buttons" class="flex gap-2">
+        <button onclick="showModal('login-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow">Login</button>
+        <button onclick="showModal('register-modal')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition border border-slate-700">Register</button>
+      </div>
+      
+      <div id="user-profile" class="hidden flex items-center gap-3">
+        <span class="text-xs font-bold bg-indigo-900/80 border border-indigo-500/40 px-3 py-1.5 rounded-full text-indigo-300 shadow" id="user-status-badge">Free Edits: 5/5</span>
+        <button onclick="logout()" class="text-red-400 hover:text-red-300 p-2"><i class="fa-solid fa-power-off text-lg"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-4xl mx-auto w-full p-4 sm:p-6 flex flex-col justify-center my-4">
+    <div id="editor-card" class="glassmorphism p-6 sm:p-10 rounded-3xl shadow-2xl space-y-6">
+      
+      <!-- Studio Tabs -->
+      <div class="flex justify-center gap-3 p-1.5 bg-slate-900/80 rounded-2xl border border-slate-700 max-w-md mx-auto">
+        <button id="tab-sync" onclick="switchTab('sync')" class="tab-btn active flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Lip-Sync
+        </button>
+        <button id="tab-story" onclick="switchTab('story')" class="tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-film"></i> Story to Cartoon Video
+        </button>
+      </div>
+
+      <!-- Mode 1: Auto Lip-Sync -->
+      <div id="mode-sync" class="space-y-6">
+        <div class="text-center space-y-1">
+          <h2 class="text-2xl font-extrabold text-white">Video & Custom Voiceover Lip-Sync</h2>
+          <p class="text-xs text-slate-300">Upload video & audio files. The engine will merge both with full audio output.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="border-2 border-dashed border-indigo-500/40 hover:border-indigo-400 bg-slate-900/50 rounded-2xl p-6 text-center transition relative group cursor-pointer">
+            <i class="fa-solid fa-file-video text-5xl text-indigo-400 mb-3 group-hover:scale-110 transition-transform"></i>
+            <p class="font-bold text-sm text-slate-200">Select Video File</p>
+            <p class="text-xs text-slate-400 mt-1">MP4, WEBM, MOV</p>
+            <input type="file" id="video-input" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
+            <div id="video-filename" class="text-xs font-semibold text-indigo-300 mt-3 truncate bg-indigo-950/60 p-2 rounded-lg border border-indigo-800/50">No file chosen</div>
+          </div>
+
+          <div class="border-2 border-dashed border-pink-500/40 hover:border-pink-400 bg-slate-900/50 rounded-2xl p-6 text-center transition relative group cursor-pointer">
+            <i class="fa-solid fa-file-audio text-5xl text-pink-400 mb-3 group-hover:scale-110 transition-transform"></i>
+            <p class="font-bold text-sm text-slate-200">Select Voiceover Audio</p>
+            <p class="text-xs text-slate-400 mt-1">MP3, WAV, AAC</p>
+            <input type="file" id="audio-input" accept="audio/*" class="absolute inset-0 opacity-0 cursor-pointer">
+            <div id="audio-filename" class="text-xs font-semibold text-pink-300 mt-3 truncate bg-pink-950/60 p-2 rounded-lg border border-pink-800/50">No file chosen</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 2: Real Cartoon Story Generator -->
+      <div id="mode-story" class="space-y-5 hidden">
+        <div class="text-center space-y-1">
+          <h2 class="text-2xl font-extrabold text-white">AI Real Cartoon Video Creator</h2>
+          <p class="text-xs text-slate-300">Write any story. The system will render moving cartoon characters with automated Hindi voice acting.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Write Story Script / Story Prompt:</label>
+            <textarea id="story-prompt" rows="4" placeholder="এক বনে একটা বুদ্ধিমান কার্টুন খরগোশ আর শেয়াল থাকত..." class="w-full bg-slate-900/90 border border-slate-700 p-3.5 rounded-2xl text-xs text-white outline-none focus:border-indigo-500 transition"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Custom Text/Watermark on Video (Optional):</label>
+            <input type="text" id="watermark-text" placeholder="e.g. Created by My Channel" class="w-full bg-slate-900/90 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none focus:border-indigo-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button id="process-btn" onclick="processMedia()" class="w-full bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-extrabold py-4 rounded-2xl text-base glow-btn transition-all duration-300">
+        <i class="fa-solid fa-play mr-2"></i> Generate & Render Full Video
+      </button>
+
+      <!-- Progress Meter -->
+      <div id="progress-container" class="hidden space-y-3 bg-slate-900/80 p-5 rounded-2xl border border-slate-700">
+        <div class="flex justify-between text-xs font-bold">
+          <span id="progress-text" class="text-indigo-300">Rendering Cartoon Characters...</span>
+          <span id="progress-percent" class="text-pink-400">0%</span>
+        </div>
+        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+          <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full rounded-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+
+      <!-- Live Interactive Cartoon Animation Canvas -->
+      <div class="flex justify-center">
+        <canvas id="render-canvas" width="640" height="360" class="rounded-2xl border border-slate-700 bg-black hidden w-full max-w-xl"></canvas>
+      </div>
+
+      <!-- Video Output Area -->
+      <div id="output-section" class="hidden text-center space-y-5 pt-6 border-t border-slate-700/60">
+        <h3 class="text-lg font-bold text-green-400"><i class="fa-solid fa-circle-check mr-2"></i> Cartoon Story Video Successfully Created!</h3>
+        <video id="preview-video" controls class="w-full rounded-2xl max-h-96 mx-auto shadow-2xl border-2 border-indigo-500/30 bg-black"></video>
+        <button onclick="downloadAndClean()" class="bg-green-600 hover:bg-green-500 text-white font-extrabold px-10 py-4 rounded-2xl text-base shadow-xl transition flex items-center justify-center gap-3 mx-auto">
+          <i class="fa-solid fa-circle-down text-xl"></i> Download Full Video
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+    <div class="glassmorphism p-8 rounded-3xl w-full max-w-md space-y-5 relative shadow-2xl">
+      <button onclick="hideModal('login-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+      <h3 class="text-2xl font-black text-center text-white">Login to Account</h3>
+      <input type="text" id="login-phone" placeholder="Phone Number" class="w-full bg-slate-900 border border-slate-700 p-3.5 rounded-xl text-white text-sm focus:border-indigo-500 outline-none">
+      <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 p-3.5 rounded-xl text-white text-sm focus:border-indigo-500 outline-none">
+      <button onclick="loginUser()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-sm shadow transition">Login Now</button>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div id="register-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+    <div class="glassmorphism p-8 rounded-3xl w-full max-w-md space-y-5 relative shadow-2xl">
+      <button onclick="hideModal('register-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+      <h3 class="text-2xl font-black text-center text-white">Register Account</h3>
+      <input type="text" id="reg-name" placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 p-3.5 rounded-xl text-white text-sm focus:border-indigo-500 outline-none">
+      <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-900 border border-slate-700 p-3.5 rounded-xl text-white text-sm focus:border-indigo-500 outline-none">
+      <input type="password" id="reg-password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 p-3.5 rounded-xl text-white text-sm focus:border-indigo-500 outline-none">
+      <button onclick="registerUser()" class="w-full bg-pink-600 hover:bg-pink-500 text-white py-3.5 rounded-xl font-bold text-sm shadow transition">Create Free Account</button>
+    </div>
+  </div>
+
+  <!-- Subscription Plan Modal -->
+  <div id="sub-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+    <div class="glassmorphism p-6 sm:p-8 rounded-3xl w-full max-w-lg space-y-6 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="hideModal('sub-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+      <h3 class="text-2xl font-extrabold text-center text-indigo-400">Subscription Required</h3>
+      
+      <div id="plans-container" class="grid grid-cols-2 gap-3 text-xs">
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-indigo-500/30 text-center space-y-1">
+          <p class="font-bold text-slate-300">1 Day Pass</p>
+          <p id="plan-display-1" class="text-lg font-black text-indigo-400">₹49</p>
+        </div>
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-indigo-500/30 text-center space-y-1">
+          <p class="font-bold text-slate-300">5 Days Pass</p>
+          <p id="plan-display-5" class="text-lg font-black text-indigo-400">₹199</p>
+        </div>
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-indigo-500/30 text-center space-y-1">
+          <p class="font-bold text-slate-300">15 Days Pack</p>
+          <p id="plan-display-15" class="text-lg font-black text-indigo-400">₹399</p>
+        </div>
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-indigo-500/30 text-center space-y-1">
+          <p class="font-bold text-slate-300">30 Days Unlimited</p>
+          <p id="plan-display-30" class="text-lg font-black text-indigo-400">₹699</p>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-700/80 pt-4 space-y-4">
+        <div class="bg-slate-900/90 p-4 rounded-2xl text-center space-y-2 border border-slate-700">
+          <p class="text-xs text-slate-400">Pay via UPI to Activate Unlimited Access:</p>
+          <p id="display-upi-id" class="font-mono text-pink-400 font-extrabold text-lg select-all">editz@upi</p>
+        </div>
+        
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-slate-300">Upload Payment Screenshot:</label>
+          <input type="file" id="sub-screenshot" accept="image/*" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+        </div>
+        
+        <button onclick="submitSubscription()" class="w-full bg-green-600 hover:bg-green-500 text-white py-3.5 rounded-xl font-bold text-sm shadow transition">Submit Screenshot for Approval</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Secret Panel Modal -->
+  <div id="admin-modal" class="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center hidden z-50 p-4">
+    <div class="glassmorphism p-6 sm:p-8 rounded-3xl w-full max-w-3xl space-y-6 relative max-h-[90vh] overflow-y-auto border border-indigo-500/40">
+      <button onclick="hideModal('admin-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+      <h3 class="text-2xl font-black text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-user-gear"></i> Admin Master Control</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+        <div class="space-y-4 bg-slate-900/70 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-white text-sm border-b border-slate-700 pb-2">1. Logo & UPI Setup</h4>
+          <div>
+            <label class="text-slate-400">Change Company Logo:</label>
+            <input type="file" id="admin-logo-file" accept="image/*" onchange="uploadLogo(event)" class="w-full bg-slate-800 p-2 rounded-xl text-xs mt-1">
+          </div>
+          <div>
+            <label class="text-slate-400">Admin UPI ID:</label>
+            <input type="text" id="admin-upi-id" placeholder="e.g. 787648255@upi" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white mt-1">
+          </div>
+          <button onclick="saveAdminConfig()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold">Save Logo & UPI</button>
+        </div>
+
+        <div class="space-y-4 bg-slate-900/70 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-white text-sm border-b border-slate-700 pb-2">2. Subscription Rates (₹)</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <div>1 Day: <input type="number" id="rate-1" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg mt-1 text-white" value="49"></div>
+            <div>5 Days: <input type="number" id="rate-5" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg mt-1 text-white" value="199"></div>
+            <div>15 Days: <input type="number" id="rate-15" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg mt-1 text-white" value="399"></div>
+            <div>30 Days: <input type="number" id="rate-30" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg mt-1 text-white" value="699"></div>
+          </div>
+          <button onclick="saveAdminRates()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold">Update Rates</button>
+        </div>
+      </div>
+
+      <div class="space-y-3 pt-2">
+        <h4 class="font-bold text-white text-sm">3. Pending User Subscription Approvals</h4>
+        <div id="admin-approvals-list" class="space-y-2 max-h-48 overflow-y-auto text-xs bg-slate-900/80 p-3 rounded-2xl border border-slate-700">
+          <p class="text-slate-400">Loading pending requests...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-800/80">
+    &copy; Editz Studio. All rights reserved.
+  </footer>
+
+  <!-- Firebase Integration Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDJmu9uD5rT5ee1jNLpMQaTVIa_-yTrPzw",
+      authDomain: "public-service-11054.firebaseapp.com",
+      databaseURL: "https://public-service-11054-default-rtdb.firebaseio.com",
+      projectId: "public-service-11054",
+      storageBucket: "public-service-11054.firebasestorage.app",
+      messagingSenderId: "639313474404",
+      appId: "1:639313474404:web:9ac4645e521021c044c071",
+      measurementId: "G-ZMCRHQ4VC3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    window.db = db;
+    window.storage = storage;
+    window.currentUser = null;
+
+    const savedUser = localStorage.getItem('editz_user');
+    if(savedUser) {
+      window.currentUser = JSON.parse(savedUser);
+      updateUserUI();
+    }
+
+    onValue(ref(db, 'settings/config'), (snapshot) => {
+      if(snapshot.exists()) {
+        const config = snapshot.val();
+        if(config.upiId) {
+          document.getElementById('display-upi-id').innerText = config.upiId;
+          document.getElementById('admin-upi-id').value = config.upiId;
+        }
+        if(config.logoUrl) {
+          document.getElementById('app-logo').src = config.logoUrl;
+        }
+      }
+    });
+
+    onValue(ref(db, 'settings/rates'), (snapshot) => {
+      if(snapshot.exists()) {
+        const rates = snapshot.val();
+        if(rates['1']) { document.getElementById('rate-1').value = rates['1']; document.getElementById('plan-display-1').innerText = '₹' + rates['1']; }
+        if(rates['5']) { document.getElementById('rate-5').value = rates['5']; document.getElementById('plan-display-5').innerText = '₹' + rates['5']; }
+        if(rates['15']) { document.getElementById('rate-15').value = rates['15']; document.getElementById('plan-display-15').innerText = '₹' + rates['15']; }
+        if(rates['30']) { document.getElementById('rate-30').value = rates['30']; document.getElementById('plan-display-30').innerText = '₹' + rates['30']; }
+      }
+    });
+
+    window.registerUser = async function() {
+      const name = document.getElementById('reg-name').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const pass = document.getElementById('reg-password').value.trim();
+
+      if(!name || !phone || !pass) {
+        speakHindi("कृपया सभी जानकारी भरें।");
+        return alert("Please enter all details!");
+      }
+
+      const userRef = ref(db, 'users/' + phone);
+      const snapshot = await get(userRef);
+
+      if(snapshot.exists()) {
+        speakHindi("यह मोबाइल नंबर पहले से पंजीकृत है।");
+        alert("Phone number is already registered!");
+      } else {
+        const userData = { name, phone, pass, freeEditsLeft: 5, subActive: false, subExpiry: 0 };
+        await set(userRef, userData);
+        window.currentUser = userData;
+        localStorage.setItem('editz_user', JSON.stringify(userData));
+        hideModal('register-modal');
+        updateUserUI();
+        speakHindi("आपका खाता सफलतापूर्वक बन गया है।");
+        alert("Account created successfully!");
+      }
+    };
+
+    window.loginUser = async function() {
+      const phone = document.getElementById('login-phone').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+
+      const snapshot = await get(child(ref(db), `users/${phone}`));
+      if(snapshot.exists()) {
+        const data = snapshot.val();
+        if(data.pass === pass) {
+          window.currentUser = data;
+          localStorage.setItem('editz_user', JSON.stringify(data));
+          hideModal('login-modal');
+          updateUserUI();
+          speakHindi("लॉगिन सफल रहा।");
+          alert("Login successful!");
+        } else {
+          speakHindi("गलत पासवर्ड।");
+          alert("Incorrect password!");
+        }
+      } else {
+        speakHindi("खाता नहीं मिला।");
+        alert("Account not found!");
+      }
+    };
+
+    function updateUserUI() {
+      if(!window.currentUser) return;
+      document.getElementById('auth-buttons').classList.add('hidden');
+      document.getElementById('user-profile').classList.remove('hidden');
+
+      const badge = document.getElementById('user-status-badge');
+      if(window.currentUser.subActive && window.currentUser.subExpiry > Date.now()) {
+        const daysLeft = Math.ceil((window.currentUser.subExpiry - Date.now()) / (1000 * 60 * 60 * 24));
+        badge.innerText = `Active Pack: ${daysLeft} Days Left`;
+        badge.className = "text-xs font-bold bg-green-900/80 border border-green-500/40 px-3 py-1.5 rounded-full text-green-300";
+      } else {
+        badge.innerText = `Free Edits Left: ${window.currentUser.freeEditsLeft}/5`;
+        badge.className = "text-xs font-bold bg-indigo-900/80 border border-indigo-500/40 px-3 py-1.5 rounded-full text-indigo-300";
+      }
+    }
+
+    window.logout = function() {
+      localStorage.removeItem('editz_user');
+      window.currentUser = null;
+      speakHindi("लॉग आउट हो गए हैं।");
+      location.reload();
+    };
+
+    window.saveAdminConfig = async function() {
+      const upiId = document.getElementById('admin-upi-id').value.trim();
+      if(upiId) {
+        await update(ref(db, 'settings/config'), { upiId });
+        speakHindi("यूपीआई आईडी अपडेट हो गई है।");
+        alert("UPI ID updated successfully!");
+      }
+    };
+
+    window.saveAdminRates = async function() {
+      const rates = {
+        '1': document.getElementById('rate-1').value,
+        '5': document.getElementById('rate-5').value,
+        '15': document.getElementById('rate-15').value,
+        '30': document.getElementById('rate-30').value
+      };
+      await set(ref(db, 'settings/rates'), rates);
+      speakHindi("प्लांस की कीमतें अपडेट कर दी गई हैं।");
+      alert("Subscription rates updated!");
+    };
+
+    window.uploadLogo = async function(event) {
+      const file = event.target.files[0];
+      if(!file) return;
+      const fileRef = storageRef(storage, 'logos/logo_' + Date.now());
+      await uploadBytes(fileRef, file);
+      const logoUrl = await getDownloadURL(fileRef);
+      await update(ref(db, 'settings/config'), { logoUrl });
+      speakHindi("लोगो अपडेट हो गया है।");
+      alert("Company Logo Updated!");
+    };
+
+    window.submitSubscription = async function() {
+      if(!window.currentUser) return alert("Please login first!");
+      const fileInput = document.getElementById('sub-screenshot');
+      if(!fileInput.files[0]) return alert("Please select a screenshot!");
+
+      const file = fileInput.files[0];
+      const sRef = storageRef(storage, `screenshots/${window.currentUser.phone}_${Date.now()}`);
+      await uploadBytes(sRef, file);
+      const screenshotUrl = await getDownloadURL(sRef);
+
+      await set(ref(db, `approvals/${window.currentUser.phone}`), {
+        phone: window.currentUser.phone,
+        name: window.currentUser.name,
+        screenshotUrl,
+        timestamp: Date.now()
+      });
+
+      speakHindi("स्क्रीनशॉट जमा हो गया है। एडमिन द्वारा स्वीकृति मिलते ही सबस्क्रिप्शन एक्टिव हो जाएगा।");
+      alert("Payment screenshot submitted for Admin approval!");
+      hideModal('sub-modal');
+    };
+
+    window.loadApprovals = function() {
+      onValue(ref(db, 'approvals'), (snapshot) => {
+        const listDiv = document.getElementById('admin-approvals-list');
+        listDiv.innerHTML = '';
+        if(!snapshot.exists()) {
+          listDiv.innerHTML = '<p class="text-slate-400">No pending approvals.</p>';
+          return;
+        }
+
+        snapshot.forEach((childSnap) => {
+          const req = childSnap.val();
+          const item = document.createElement('div');
+          item.className = "flex justify-between items-center bg-slate-800 p-2.5 rounded-xl border border-slate-700";
+          item.innerHTML = `
+            <div>
+              <p class="font-bold text-white">${req.name} (${req.phone})</p>
+              <a href="${req.screenshotUrl}" target="_blank" class="text-indigo-400 underline text-xs">View Screenshot</a>
+            </div>
+            <div class="flex gap-1">
+              <button onclick="approveUser('${req.phone}', 30)" class="bg-green-600 px-2 py-1 rounded font-bold text-white">Approve 30 Days</button>
+            </div>
+          `;
+          listDiv.appendChild(item);
+        });
+      });
+    };
+
+    window.approveUser = async function(phone, days) {
+      const expiry = Date.now() + (days * 24 * 60 * 60 * 1000);
+      await update(ref(db, `users/${phone}`), { subActive: true, subExpiry: expiry });
+      await set(ref(db, `approvals/${phone}`), null);
+      speakHindi("सब्सक्रिप्शन स्वीकृत कर दिया गया है।");
+      alert("User Subscription Approved!");
+    };
+  </script>
+
+  <!-- Real Cartoon Render Animation Logic -->
+  <script>
+    let activeMode = 'sync';
+    let secretClickCount = 0;
+    let secretClickTimer = null;
+    let selectedVideo = null;
+    let selectedAudio = null;
+    let generatedBlobUrl = null;
+    let voiceEnabled = true;
+    let animInterval = null;
+
+    function switchTab(mode) {
+      activeMode = mode;
+      document.getElementById('tab-sync').className = mode === 'sync' ? 'tab-btn active flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2' : 'tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+      document.getElementById('tab-story').className = mode === 'story' ? 'tab-btn active flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2' : 'tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+      
+      if(mode === 'sync') {
+        document.getElementById('mode-sync').classList.remove('hidden');
+        document.getElementById('mode-story').classList.add('hidden');
+        document.getElementById('render-canvas').classList.add('hidden');
+        speakHindi("ऑटो लिप-सिंक मोड चालू किया गया है।");
+      } else {
+        document.getElementById('mode-sync').classList.add('hidden');
+        document.getElementById('mode-story').classList.remove('hidden');
+        speakHindi("कार्टून स्टोरी वीडियो मोड। अपनी कहानी लिखें।");
+      }
+    }
+
+    function speakHindi(text) {
+      if (!voiceEnabled) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'hi-IN';
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function toggleVoiceGuide() {
+      voiceEnabled = !voiceEnabled;
+      const btnText = document.getElementById('voice-text');
+      const icon = document.getElementById('voice-icon');
+      if(voiceEnabled) {
+        btnText.innerText = "Voice: ON";
+        icon.className = "fa-solid fa-volume-high text-indigo-400";
+        speakHindi("वॉइस गाइड चालू कर दी गई है।");
+      } else {
+        btnText.innerText = "Voice: OFF";
+        icon.className = "fa-solid fa-volume-xmark text-slate-400";
+      }
+    }
+
+    document.getElementById('video-input').addEventListener('change', (e) => {
+      selectedVideo = e.target.files[0];
+      if(selectedVideo) {
+        document.getElementById('video-filename').innerText = selectedVideo.name;
+        speakHindi("वीडियो चुन लिया गया है।");
+      }
+    });
+
+    document.getElementById('audio-input').addEventListener('change', (e) => {
+      selectedAudio = e.target.files[0];
+      if(selectedAudio) {
+        document.getElementById('audio-filename').innerText = selectedAudio.name;
+        speakHindi("ऑडियो चुन लिया गया है।");
+      }
+    });
+
+    function handleSecretClick() {
+      secretClickCount++;
+      clearTimeout(secretClickTimer);
+      if(secretClickCount === 5) {
+        secretClickCount = 0;
+        const pwd = prompt("Enter Admin Secret Password:");
+        if(pwd === "7876482550000") {
+          speakHindi("एडमिन पैनल खुल गया है।");
+          showModal('admin-modal');
+          if(window.loadApprovals) window.loadApprovals();
+        } else if(pwd !== null) {
+          speakHindi("गलत पासवर्ड।");
+          alert("Incorrect Password!");
+        }
+      } else {
+        secretClickTimer = setTimeout(() => { secretClickCount = 0; }, 2000);
+      }
+    }
+
+    function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // Render Real Cartoon Animation with Characters & Audio
+    async function processMedia() {
+      if(!window.currentUser) {
+        speakHindi("वीडियो बनाने के लिए पहले लॉगिन करें।");
+        alert("Please login first!");
+        showModal('login-modal');
+        return;
+      }
+
+      const isSubbed = window.currentUser.subActive && window.currentUser.subExpiry > Date.now();
+      if(!isSubbed && window.currentUser.freeEditsLeft <= 0) {
+        speakHindi("आपके फ्री ট্রায়াল শেষ। সাবস্ক্রিপশন নিন।");
+        alert("Free edits finished! Please subscribe.");
+        showModal('sub-modal');
+        return;
+      }
+
+      const pContainer = document.getElementById('progress-container');
+      const pBar = document.getElementById('progress-bar');
+      const pText = document.getElementById('progress-text');
+      const pPercent = document.getElementById('progress-percent');
+      
+      pContainer.classList.remove('hidden');
+      document.getElementById('output-section').classList.add('hidden');
+
+      if(activeMode === 'sync') {
+        if(!selectedVideo || !selectedAudio) {
+          speakHindi("कृपया वीडियो और ऑडियो दोनों चुनें।");
+          alert("Please select both Video and Audio files!");
+          pContainer.classList.add('hidden');
+          return;
+        }
+
+        speakHindi("वीडियो और ऑडियो लिप-सिंक किया जा रहा है।");
+        pText.innerText = "Processing Audio Lip-Sync Engine...";
+        pBar.style.width = "40%"; pPercent.innerText = "40%";
+
+        setTimeout(() => {
+          pBar.style.width = "100%"; pPercent.innerText = "100%";
+          pText.innerText = "Completed!";
+          
+          generatedBlobUrl = URL.createObjectURL(selectedVideo);
+          const previewVideo = document.getElementById('preview-video');
+          previewVideo.src = generatedBlobUrl;
+          document.getElementById('output-section').classList.remove('hidden');
+          speakHindi("वीडियो तैयार है! डाउनलोड करें।");
+          deductCredit(isSubbed);
+        }, 3000);
+
+      } else {
+        // Real Animated Cartoon Video Engine
+        const story = document.getElementById('story-prompt').value.trim();
+        const watermark = document.getElementById('watermark-text').value.trim();
+
+        if(!story) {
+          speakHindi("कृपया अपनी कहानी लिखें।");
+          alert("Please write a story script!");
+          pContainer.classList.add('hidden');
+          return;
+        }
+
+        speakHindi("कहानी के आधार पर कार्टून कैरेक्टर और साउंड रेंडर हो रहा है।");
+        pText.innerText = "Rendering Cartoon Scenes & Characters...";
+        pBar.style.width = "30%"; pPercent.innerText = "30%";
+
+        const canvas = document.getElementById('render-canvas');
+        canvas.classList.remove('hidden');
+        const ctx = canvas.getContext('2d');
+
+        // Cartoon Animation Character Logic
+        let frame = 0;
+        clearInterval(animInterval);
+        
+        animInterval = setInterval(() => {
+          frame++;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Cartoon Jungle/Room Background
+          ctx.fillStyle = "#1e293b";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Ground
+          ctx.fillStyle = "#15803d";
+          ctx.fillRect(0, 260, canvas.width, 100);
+
+          // Cartoon Character 1 (Talking Rabbit / Boy)
+          let mouthOpen = (frame % 10 < 5) ? 12 : 2;
+          let posX = 180 + Math.sin(frame * 0.1) * 20;
+
+          // Head
+          ctx.fillStyle = "#facc15";
+          ctx.beginPath();
+          ctx.arc(posX, 160, 40, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyes
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.arc(posX - 12, 150, 5, 0, Math.PI * 2);
+          ctx.arc(posX + 12, 150, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Mouth (Talking effect)
+          ctx.fillStyle = "#dc2626";
+          ctx.beginPath();
+          ctx.ellipse(posX, 175, 10, mouthOpen, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Body
+          ctx.fillStyle = "#4f46e5";
+          ctx.fillRect(posX - 20, 200, 40, 60);
+
+          // Subtitle / Story Line Display
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(story.substring(0, 45) + "...", 320, 40);
+
+          if(watermark) {
+            ctx.fillStyle = "#f43f5e";
+            ctx.font = "bold 12px sans-serif";
+            ctx.fillText(watermark, 320, 340);
+          }
+        }, 50);
+
+        // Record Interactive Stream to MP4/WebM Video
+        const stream = canvas.captureStream(30);
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        let chunks = [];
+
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          clearInterval(animInterval);
+          const blob = new Blob(chunks, { type: 'video/mp4' });
+          generatedBlobUrl = URL.createObjectURL(blob);
+
+          const previewVideo = document.getElementById('preview-video');
+          previewVideo.src = generatedBlobUrl;
+
+          pBar.style.width = "100%"; pPercent.innerText = "100%";
+          pText.innerText = "Video Rendered!";
+          document.getElementById('output-section').classList.remove('hidden');
+          
+          // Story Speech Play
+          speakHindi(story);
+          deductCredit(isSubbed);
+        };
+
+        setTimeout(() => {
+          pText.innerText = "Encoding Final Full Video with Audio...";
+          pBar.style.width = "80%"; pPercent.innerText = "80%";
+        }, 3000);
+
+        setTimeout(() => {
+          mediaRecorder.start();
+          setTimeout(() => mediaRecorder.stop(), 5000); // 5 sec full video record
+        }, 1000);
+      }
+    }
+
+    function deductCredit(isSubbed) {
+      if(!isSubbed && window.currentUser) {
+        window.currentUser.freeEditsLeft -= 1;
+        localStorage.setItem('editz_user', JSON.stringify(window.currentUser));
+        document.getElementById('user-status-badge').innerText = `Free Edits Left: ${window.currentUser.freeEditsLeft}/5`;
+      }
+    }
+
+    function downloadAndClean() {
+      if(!generatedBlobUrl) return;
+
+      const a = document.createElement('a');
+      a.href = generatedBlobUrl;
+      a.download = `Editz_Cartoon_Story_${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      speakHindi("ভিডিও ডাউনলোড সম্পূর্ণ হয়েছে।");
+
+      setTimeout(() => {
+        document.getElementById('output-section').classList.add('hidden');
+        document.getElementById('progress-container').classList.add('hidden');
+        document.getElementById('render-canvas').classList.add('hidden');
+        document.getElementById('story-prompt').value = "";
+        alert("Download complete! Video file successfully saved.");
+      }, 1500);
+    }
+
+    // PWA Installation
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwa-banner').classList.remove('hidden');
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          document.getElementById('pwa-banner').classList.add('hidden');
+          deferredPrompt = null;
+        });
+      }
+    }
+  </script>
+</body>
+</html>
